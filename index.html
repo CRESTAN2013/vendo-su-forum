@@ -1,889 +1,1032 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" class="h-full bg-slate-900 text-slate-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cross-Listing & Forum Manager - Cloud Sync Pro</title>
+    <title>Vendo su Forum - Gestore Inventario & Sync</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: #0f172a; color: #f8fafc; min-height: 100vh; padding-bottom: 2rem; }
-        header { background-color: #1e293b; border-bottom: 1px solid #334155; padding: 1rem; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .header-container { max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; }
-        .brand { display: flex; align-items: center; gap: 0.75rem; }
-        .brand-icon { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.5rem 0.75rem; border-radius: 0.6rem; font-weight: bold; font-size: 1.2rem; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4); }
-        .cloud-badge { font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 1rem; background-color: #334155; color: #94a3b8; display: inline-flex; align-items: center; gap: 0.3rem; }
-        .cloud-badge.active { background-color: #065f46; color: #34d399; border: 1px solid #059669; }
-        
-        .nav-tabs { display: flex; gap: 0.25rem; background-color: #0f172a; padding: 0.25rem; border-radius: 0.5rem; border: 1px solid #334155; flex-wrap: wrap; }
-        .nav-btn { background: none; border: none; color: #94a3b8; padding: 0.6rem 1rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border-radius: 0.375rem; transition: all 0.2s; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-        .nav-btn.active { background-color: #4f46e5; color: white; box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3); }
-        .nav-btn:hover:not(.active) { color: white; }
-        
-        main { max-width: 1200px; margin: 1.5rem auto; padding: 0 1rem; }
-        
-        /* VISIBILITÀ SCHEDE */
-        .tab-content { display: none !important; }
-        .tab-content.active { display: block !important; }
-
-        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
-        @media (min-width: 900px) { .grid-2 { grid-template-columns: 7fr 5fr; } }
-        .card { background-color: rgba(30, 41, 59, 0.85); backdrop-filter: blur(8px); border: 1px solid #334155; border-radius: 1rem; padding: 1.25rem; margin-bottom: 1.5rem; }
-        .card-header { border-bottom: 1px solid #334155; padding-bottom: 0.75rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
-        .card-title { color: #818cf8; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; }
-        .form-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
-        @media (min-width: 600px) { .form-grid { grid-template-columns: 1fr 1fr; } }
-        .full-width { grid-column: 1 / -1; }
-        label { display: block; font-size: 0.75rem; font-weight: 500; color: #cbd5e1; margin-bottom: 0.25rem; }
-        input, select, textarea { width: 100%; background-color: #0f172a; border: 1px solid #334155; border-radius: 0.5rem; padding: 0.5rem 0.75rem; color: #f8fafc; font-size: 0.875rem; outline: none; transition: border-color 0.2s; }
-        input:focus, select:focus, textarea:focus { border-color: #6366f1; }
-        .btn-group { display: flex; gap: 0.75rem; margin-top: 1rem; }
-        .btn { padding: 0.6rem 1.2rem; border-radius: 0.5rem; border: none; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-        .btn-primary { background-color: #10b981; color: white; flex: 1; }
-        .btn-primary:hover { background-color: #059669; }
-        .btn-secondary { background-color: #475569; color: #f1f5f9; }
-        .btn-action { background-color: #4f46e5; color: white; }
-        .btn-action:hover { background-color: #4338ca; }
-        .btn-danger { background-color: #ef4444; color: white; }
-        .btn-danger:hover { background-color: #dc2626; }
-        .code-preview { background-color: #0f172a; font-family: monospace; font-size: 0.75rem; color: #cbd5e1; resize: vertical; }
-        .forum-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-        .forum-card { background-color: #0f172a; border: 1px solid #334155; border-radius: 0.75rem; padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem; }
-        .badge { font-size: 0.65rem; padding: 0.2rem 0.5rem; border-radius: 0.25rem; background-color: #334155; color: #cbd5e1; display: inline-block; }
-        .badge-cat { background-color: #1e1b4b; color: #a5b4fc; border: 1px solid #4338ca; }
-        .item-row { background-color: #0f172a; border: 1px solid #334155; border-radius: 0.75rem; padding: 1rem; margin-bottom: 0.75rem; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; }
-        .search-bar { width: 240px; font-size: 0.75rem; padding: 0.3rem 0.6rem; }
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
     </style>
 </head>
-<body>
+<body class="h-full flex flex-col min-h-screen bg-slate-900 text-slate-100">
 
-    <header>
-        <div class="header-container">
-            <div class="brand">
-                <div class="brand-icon">🏁</div>
-                <div>
-                    <h1 style="font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
-                        Cross-Listing & Forum Manager
-                        <span id="cloud-status" class="cloud-badge">⚪ Cloud non collegato</span>
-                    </h1>
-                    <p style="font-size: 0.75rem; color: #94a3b8;">Scooter, Gare, Moto & Meccanica di Precisione</p>
+    <!-- Top Navigation & Header -->
+    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-30 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo & Status -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-brand-600 text-white p-2 rounded-lg font-bold text-xl flex items-center justify-center w-10 h-10 shadow">
+                        <i class="fa-solid me-0.5 fa-boxes-packing"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold leading-tight text-white">Vendo su Forum</h1>
+                        <div class="flex items-center space-x-2 text-xs">
+                            <span id="sync-status-badge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-900/50 text-red-300 border border-red-700">
+                                <span class="w-1.5 h-1.5 mr-1.5 bg-red-400 rounded-full animate-pulse"></span> Non collegato
+                            </span>
+                            <span id="last-sync-time" class="text-slate-400 hidden sm:inline">Nessuna sincronizzazione</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sync Quick Action Buttons -->
+                <div class="flex items-center space-x-2">
+                    <button onclick="saveToGitHub()" title="Salva modifiche su GitHub" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center shadow-sm">
+                        <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i>
+                        <span class="hidden md:inline">Salva su</span> GitHub
+                    </button>
+                    <button onclick="loadFromGitHub()" title="Carica ultimi dati da GitHub" class="bg-sky-600 hover:bg-sky-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center shadow-sm">
+                        <i class="fa-solid fa-cloud-arrow-down mr-1.5"></i>
+                        <span class="hidden md:inline">Carica da</span> GitHub
+                    </button>
+                    <button onclick="openConfigModal()" title="Impostazioni GitHub Sync" class="bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center">
+                        <i class="fa-solid fa-gear text-brand-500"></i>
+                        <span class="hidden sm:inline ml-1.5">Impostazioni</span>
+                    </button>
                 </div>
             </div>
-            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                <button onclick="saveToGitHub()" class="btn btn-action" style="padding: 0.35rem 0.7rem; font-size: 0.75rem; background: linear-gradient(135deg, #6366f1, #4f46e5);">☁️ Salva su GitHub</button>
-                <button onclick="loadFromGitHub()" class="btn btn-secondary" style="padding: 0.35rem 0.7rem; font-size: 0.75rem; background-color: #0891b2;">🔄 Carica da GitHub</button>
-                <button onclick="exportData()" class="btn btn-secondary" style="padding: 0.35rem 0.7rem; font-size: 0.75rem; background-color: #0284c7;">📥 Backup</button>
-                <button onclick="document.getElementById('import-file').click()" class="btn btn-secondary" style="padding: 0.35rem 0.7rem; font-size: 0.75rem; background-color: #0d9488;">📤 Importa</button>
-                <input type="file" id="import-file" style="display: none;" accept=".json" onchange="importData(event)">
-            </div>
-            <nav class="nav-tabs">
-                <button data-target="listing" id="btn-listing" class="nav-btn active">Nuova Inserzione</button>
-                <button data-target="directory" id="btn-directory" class="nav-btn">Database Forum</button>
-                <button data-target="inventory" id="btn-inventory" class="nav-btn">Inventario & UP</button>
-                <button data-target="vault" id="btn-vault" class="nav-btn">Vault & Config GitHub</button>
-            </nav>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-slate-800/80 border-t border-slate-700/50 px-4 max-w-7xl mx-auto flex space-x-1 overflow-x-auto scrollbar-none">
+            <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn px-4 py-2.5 text-sm font-medium border-b-2 border-brand-500 text-brand-500 whitespace-nowrap flex items-center">
+                <i class="fa-solid fa-box-archive mr-2"></i> Inventario Articoli
+            </button>
+            <button onclick="switchTab('forums')" id="tab-forums" class="tab-btn px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap flex items-center">
+                <i class="fa-solid fa-comments mr-2"></i> Directory Forum
+            </button>
+            <button onclick="switchTab('generator')" id="tab-generator" class="tab-btn px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap flex items-center">
+                <i class="fa-solid fa-file-pen mr-2"></i> Generatore Annunci
+            </button>
+            <button onclick="switchTab('vault')" id="tab-vault" class="tab-btn px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap flex items-center">
+                <i class="fa-solid fa-vault mr-2"></i> Vault & Credenziali
+            </button>
         </div>
     </header>
 
-    <main>
-        <!-- TAB 1: NUOVA INSERZIONE -->
-        <div id="tab-listing" class="tab-content active">
-            <div class="grid-2">
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">⚙️ Dettagli Pezzo / Ricambio</span>
-                        <span class="badge">Pezzo Unico / Ricambio 2T-4T</span>
-                    </div>
-                    <div class="form-grid">
-                        <div class="full-width">
-                            <label>Titolo Inserzione</label>
-                            <input type="text" id="item-title" placeholder="Es. Carter Minarelli Verticale Nudo o Inverter CAME 0.75kW">
-                        </div>
-                        <div>
-                            <label>Marca & Modello Engine / Componente</label>
-                            <input type="text" id="item-brand" placeholder="Es. Minarelli / Piaggio / Vespa / Malossi / Polini">
-                        </div>
-                        <div>
-                            <label>Codice MPN / OEM / Sigla Blocco</label>
-                            <input type="text" id="item-mpn" placeholder="Es. AM6 / VSE1M / Zip SP / 801XC-0010">
-                        </div>
-                        <div>
-                            <label>Prezzo (€)</label>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <input type="number" id="item-price" placeholder="200">
-                                <select id="item-price-type" style="width: 120px;">
-                                    <option value="Fisso">Fisso</option>
-                                    <option value="Trattabile">Trattabile</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <label>Località / Provincia</label>
-                            <input type="text" id="item-location" placeholder="Es. VR">
-                        </div>
-                        <div>
-                            <label>Condizioni</label>
-                            <select id="item-condition">
-                                <option value="Nuovo / Mai lavorato">Nuovo / Mai lavorato</option>
-                                <option value="Usato - Ottime condizioni">Usato - Ottime condizioni</option>
-                                <option value="Usato - Segni d'usura / Funzionante">Usato - Segni d'usura / Funzionante</option>
-                                <option value="Per ricambi / Da revisionare">Per ricambi / Da revisionare</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label>Ore di Lavoro / Km / Ore Banco Gare</label>
-                            <input type="text" id="item-usage" placeholder="Es. Carter vergine / Solo rodaggio banco">
-                        </div>
-                        <div class="full-width">
-                            <label>Lavorazioni Meccaniche / Barenatura / Note / Difetti</label>
-                            <textarea id="item-defects" rows="2" placeholder="Es. Carter vuoto grezzo non lavorato, sedi cuscinetti e filetti perfetti."></textarea>
-                        </div>
-                        <div class="full-width">
-                            <label>Spedizione e Pagamento</label>
-                            <input type="text" id="item-shippay" placeholder="Ritiro a mano / Spedizione corriere (+10€) - PayPal / Bonifico">
-                        </div>
-                        <div class="full-width">
-                            <label>Link Foto Reali (URL separate da virgola o a capo)</label>
-                            <textarea id="item-images" rows="2" placeholder="https://i.ebayimg.com/... , https://i.postimg.cc/..."></textarea>
-                        </div>
-                    </div>
-                    <div class="btn-group">
-                        <button onclick="saveToInventory()" class="btn btn-primary">Salva nell'Inventario</button>
-                        <button onclick="resetForm()" class="btn btn-secondary">Svuota</button>
-                    </div>
-                </div>
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
 
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">📝 Generatori Codice BBCode & Markdown</span>
-                    </div>
-                    <div style="margin-bottom: 1rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                            <label>BBCode (phpBB, XenForo, vBulletin)</label>
-                            <button onclick="copyCode('bbcode')" class="btn btn-action" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Copia BBCode</button>
-                        </div>
-                        <textarea id="output-bbcode" class="code-preview" rows="11" readonly></textarea>
-                    </div>
+        <!-- ================= INVENTORY TAB ================= -->
+        <section id="sec-inventory" class="tab-content space-y-6">
+            <!-- Summary Stats & Controls -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700/60 shadow-sm flex justify-between items-center">
                     <div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                            <label>Markdown (Discourse)</label>
-                            <button onclick="copyCode('markdown')" class="btn btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Copia Markdown</button>
-                        </div>
-                        <textarea id="output-markdown" class="code-preview" rows="7" readonly></textarea>
+                        <p class="text-xs text-slate-400 uppercase font-semibold">Articoli Totali</p>
+                        <p id="stat-total-items" class="text-2xl font-bold text-white mt-0.5">0</p>
                     </div>
+                    <div class="p-3 bg-slate-700/50 rounded-lg text-brand-500"><i class="fa-solid fa-cubes text-xl"></i></div>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700/60 shadow-sm flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase font-semibold">Disponibili</p>
+                        <p id="stat-available-items" class="text-2xl font-bold text-emerald-400 mt-0.5">0</p>
+                    </div>
+                    <div class="p-3 bg-slate-700/50 rounded-lg text-emerald-400"><i class="fa-solid fa-check-circle text-xl"></i></div>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700/60 shadow-sm flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase font-semibold">Venduti</p>
+                        <p id="stat-sold-items" class="text-2xl font-bold text-amber-400 mt-0.5">0</p>
+                    </div>
+                    <div class="p-3 bg-slate-700/50 rounded-lg text-amber-400"><i class="fa-solid fa-handshake text-xl"></i></div>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700/60 shadow-sm flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase font-semibold">Valore Stimato Totale</p>
+                        <p id="stat-total-value" class="text-2xl font-bold text-sky-400 mt-0.5">€ 0.00</p>
+                    </div>
+                    <div class="p-3 bg-slate-700/50 rounded-lg text-sky-400"><i class="fa-solid fa-sack-dollar text-xl"></i></div>
                 </div>
             </div>
-        </div>
 
-        <!-- TAB 2: DATABASE FORUM -->
-        <div id="tab-directory" class="tab-content">
-            <div class="card">
-                <div class="card-header">
-                    <div>
-                        <span class="card-title">🌐 Database Forum Scooter, Gare & Meccanica</span>
-                        <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem;">Gestisci, elimina o salva le credenziali d'accesso per i forum di settore</p>
-                    </div>
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
-                        <select id="filter-cat" onchange="renderDirectory()" class="search-bar"></select>
-                        <button onclick="addNewCategoryPrompt()" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background-color: #334155;">+ Nuova Categoria</button>
-                        <button onclick="toggleAddForum()" class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;">+ Aggiungi Forum</button>
-                    </div>
+            <!-- Toolbar: Filter, Search, Add -->
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700/60 flex flex-col md:flex-row gap-4 justify-between items-center">
+                <!-- Search -->
+                <div class="relative w-full md:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="inv-search" oninput="renderInventory()" placeholder="Cerca articolo, codice, marca..." class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
                 </div>
 
-                <div id="add-forum-box" style="display: none; background-color: #0f172a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
-                    <div class="form-grid">
-                        <input type="text" id="new-name" placeholder="Nome Forum">
-                        <select id="new-cat"></select>
-                        <select id="new-engine">
-                            <option value="phpBB">phpBB</option>
-                            <option value="XenForo">XenForo</option>
-                            <option value="vBulletin">vBulletin</option>
-                            <option value="Discourse">Discourse</option>
+                <!-- Filters -->
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <select id="inv-filter-status" onchange="renderInventory()" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-brand-500">
+                        <option value="ALL">Tutti gli stati</option>
+                        <option value="Disponibile">Disponibile</option>
+                        <option value="In Trattativa">In Trattativa</option>
+                        <option value="Venduto">Venduto</option>
+                    </select>
+
+                    <select id="inv-filter-cat" onchange="renderInventory()" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-brand-500">
+                        <option value="ALL">Tutte le categorie</option>
+                        <!-- Dynamic Categories -->
+                    </select>
+
+                    <button onclick="openItemModal()" class="bg-brand-600 hover:bg-brand-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition flex items-center ml-auto">
+                        <i class="fa-solid fa-plus mr-2"></i> Nuovo Articolo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Inventory Grid/Table -->
+            <div id="inventory-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Items injected by JS -->
+            </div>
+        </section>
+
+        <!-- ================= FORUMS TAB ================= -->
+        <section id="sec-forums" class="tab-content hidden space-y-6">
+            <div class="flex justify-between items-center bg-slate-800 p-4 rounded-xl border border-slate-700">
+                <div>
+                    <h2 class="text-lg font-bold text-white">Directory Forum & Community</h2>
+                    <p class="text-xs text-slate-400">Gestisci i link e le credenziali di accesso ai forum di motori e meccanica</p>
+                </div>
+                <button onclick="openForumModal()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center">
+                    <i class="fa-solid fa-plus mr-2"></i> Aggiungi Forum
+                </button>
+            </div>
+
+            <div id="forums-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Forums injected by JS -->
+            </div>
+        </section>
+
+        <!-- ================= ANNOUNCEMENT GENERATOR TAB ================= -->
+        <section id="sec-generator" class="tab-content hidden space-y-6">
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4">
+                <h2 class="text-lg font-bold text-white flex items-center">
+                    <i class="fa-solid fa-bullhorn text-brand-500 mr-2"></i> Generatore Annuncio Veloce
+                </h2>
+                <p class="text-sm text-slate-400">Seleziona un articolo dal tuo inventario e genera al volo il testo formattato in BBCode (per forum tradizionali) o Markdown.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-2">Seleziona Articolo</label>
+                        <select id="gen-item-select" onchange="generatePost()" class="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg p-2.5 text-sm focus:outline-none focus:border-brand-500">
+                            <option value="">-- Seleziona un oggetto --</option>
                         </select>
-                        <input type="text" id="new-url" class="full-width" placeholder="URL Mercatino / Sezione Vendo">
                     </div>
-                    <button onclick="saveCustomForum()" class="btn btn-action" style="margin-top: 0.75rem; width: 100%;">Salva Forum nel Database</button>
-                </div>
-
-                <div id="forum-directory" class="forum-grid"></div>
-            </div>
-        </div>
-
-        <!-- TAB 3: INVENTARIO -->
-        <div id="tab-inventory" class="tab-content">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">📦 Inventario Articoli & Registro Data/Ora Esatta</span>
-                    <button onclick="loadInventory()" class="btn btn-secondary" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;">Aggiorna</button>
-                </div>
-                <div id="inventory-list"></div>
-            </div>
-        </div>
-
-        <!-- TAB 4: VAULT CREDENZIALI & GITHUB CONFIG -->
-        <div id="tab-vault" class="tab-content">
-            <div class="card" style="max-width: 650px; margin: 0 auto;">
-                <div class="card-header">
-                    <span class="card-title">🔐 Vault Credenziali & Configurazione GitHub Sync</span>
-                    <button id="btn-close-vault-top" onclick="closeVault()" class="btn btn-danger" style="display: none; padding: 0.3rem 0.8rem; font-size: 0.75rem;">🔒 Chiudi Vault</button>
-                </div>
-                <div id="vault-auth">
-                    <label id="vault-pass-label">Imposta o inserisci la Master Password per accedere</label>
-                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                        <input type="password" id="master-pass" placeholder="Master Password...">
-                        <button onclick="unlockVault()" id="btn-unlock-vault" class="btn btn-action">Sblocca Vault</button>
-                    </div>
-                    <div id="reset-pass-box" style="margin-top: 0.75rem; display: none;">
-                        <button onclick="resetMasterPassword()" class="btn btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; background-color: #334155;">Reset Master Password</button>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-2">Formato Output</label>
+                        <select id="gen-format-select" onchange="generatePost()" class="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg p-2.5 text-sm focus:outline-none focus:border-brand-500">
+                            <option value="bbcode">BBCode (Forum phpBB, vBulletin, ecc.)</option>
+                            <option value="markdown">Markdown (GitHub, Discord, ecc.)</option>
+                        </select>
                     </div>
                 </div>
-                <div id="vault-content" style="display: none; margin-top: 1rem;">
-                    
-                    <!-- CONFIGURAZIONE GITHUB SYNC -->
-                    <div style="background:#0f172a; padding:1rem; border-radius:0.5rem; border:1px solid #4338ca; margin-bottom:1.5rem;">
-                        <h4 style="font-size:0.875rem; color:#818cf8; margin-bottom:0.5rem;">⚙️ Impostazioni GitHub Sync</h4>
-                        <div class="form-grid">
-                            <div>
-                                <label>GitHub Username</label>
-                                <input type="text" id="gh-user" placeholder="es. CRESTAN2013">
-                            </div>
-                            <div>
-                                <label>Nome Repository</label>
-                                <input type="text" id="gh-repo" placeholder="es. forum-manager">
-                            </div>
-                            <div class="full-width">
-                                <label>GitHub Personal Access Token (PAT)</label>
-                                <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-                            </div>
-                        </div>
-                        <button onclick="saveGitHubConfig()" class="btn btn-secondary" style="margin-top:0.75rem; font-size:0.75rem; width:100%; background-color:#334155;">Salva Configurazione GitHub</button>
-                    </div>
 
-                    <!-- CREDENZIALI FORUM -->
-                    <div class="form-grid">
-                        <div>
-                            <label>Nome Forum / Sito</label>
-                            <input type="text" id="v-name" placeholder="Es. Scooternos / Et3.it">
-                        </div>
-                        <div>
-                            <label>URL Login / Pagina Accesso</label>
-                            <input type="text" id="v-url" placeholder="https://www.forum.com/login">
-                        </div>
-                        <div>
-                            <label>Username / Email Accesso</label>
-                            <input type="text" id="v-user" placeholder="Il tuo username">
-                        </div>
-                        <div>
-                            <label>Password Forum</label>
-                            <input type="password" id="v-pass" placeholder="Password">
-                        </div>
-                        <div class="full-width">
-                            <label>Note aggiuntive / Domanda di sicurezza</label>
-                            <input type="text" id="v-notes" placeholder="Es. Richiede conferma email o PIN 2FA">
-                        </div>
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-xs font-semibold text-slate-300 uppercase">Anteprima Testo Generato</label>
+                        <button onclick="copyGeneratedPost()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1 rounded transition flex items-center">
+                            <i class="fa-solid fa-copy mr-1"></i> Copia negli appunti
+                        </button>
                     </div>
-                    <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
-                        <button onclick="saveVaultCred()" class="btn btn-primary">Salva Credenziale nel Vault</button>
-                        <button onclick="closeVault()" class="btn btn-danger">🔒 Chiudi Vault</button>
-                    </div>
-                    
-                    <div style="margin-top: 1.5rem; border-top: 1px solid #334155; padding-top: 1rem;">
-                        <h4 style="font-size: 0.875rem; color: #818cf8; margin-bottom: 0.5rem;">Credenziali Salvate</h4>
-                        <div id="vault-list"></div>
-                    </div>
+                    <textarea id="gen-output-text" rows="10" class="w-full bg-slate-950 font-mono text-sm border border-slate-700 rounded-lg p-3 text-slate-300 focus:outline-none focus:border-brand-500" placeholder="Il testo del tuo annuncio comparirà qui..."></textarea>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- ================= VAULT & CONFIG TAB ================= -->
+        <section id="sec-vault" class="tab-content hidden space-y-6">
+            <div class="max-w-3xl mx-auto space-y-6">
+
+                <!-- GitHub Sync Card -->
+                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center">
+                                <i class="fa-brands fa-github text-brand-500 mr-2"></i> Configurazione Cloud GitHub Sync
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-1">Sincronizza il tuo database `data.json` direttamente sulla tua repository.</p>
+                        </div>
+                        <button onclick="openConfigModal()" class="bg-brand-600 hover:bg-brand-500 text-white px-3 py-1.5 rounded text-xs font-medium transition">
+                            <i class="fa-solid fa-sliders mr-1"></i> Apri Modale
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-900/60 p-4 rounded-lg border border-slate-700/50 text-xs">
+                        <div>
+                            <span class="text-slate-400 block">Username:</span>
+                            <span id="vault-disp-user" class="font-mono text-slate-200 font-semibold">-</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block">Repository:</span>
+                            <span id="vault-disp-repo" class="font-mono text-slate-200 font-semibold">-</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block">PAT Token:</span>
+                            <span id="vault-disp-token" class="font-mono text-slate-200 font-semibold">Non salvato</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex flex-wrap gap-2">
+                        <button onclick="exportConfigFile()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded-lg text-xs font-medium transition flex items-center">
+                            <i class="fa-solid fa-file-export mr-1.5 text-amber-400"></i> Esporta File Chiavi Config (.json)
+                        </button>
+                        <label class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded-lg text-xs font-medium transition flex items-center cursor-pointer">
+                            <i class="fa-solid fa-file-import mr-1.5 text-emerald-400"></i> Importa File Chiavi
+                            <input type="file" id="config-file-input" onchange="importConfigFile(event)" accept=".json" class="hidden">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Vault Protected Area -->
+                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4">
+                    <h2 class="text-lg font-bold text-white flex items-center">
+                        <i class="fa-solid fa-key text-amber-400 mr-2"></i> Vault Password Sicuro
+                    </h2>
+                    <p class="text-xs text-slate-400">Salva password, note riservate e PIN in modo sicuro.</p>
+
+                    <div id="vault-lock-screen" class="bg-slate-900 p-6 rounded-lg border border-slate-700 text-center space-y-3">
+                        <i class="fa-solid fa-lock text-3xl text-slate-500"></i>
+                        <p class="text-sm text-slate-300 font-medium">Inserisci la tua Master Password per sbloccare il Vault</p>
+                        <div class="max-w-xs mx-auto flex gap-2">
+                            <input type="password" id="vault-master-pass" placeholder="Master Password..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                            <button onclick="unlockVault()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Sblocca</button>
+                        </div>
+                    </div>
+
+                    <div id="vault-content" class="hidden space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-semibold text-emerald-400"><i class="fa-solid fa-unlock mr-1"></i> Vault Sbloccato</span>
+                            <button onclick="lockVault()" class="text-xs text-slate-400 hover:text-white underline">Blocca Vault</button>
+                        </div>
+                        <textarea id="vault-notes" rows="6" placeholder="Incolla qui le tue note riservate, password dei forum, o annotazioni private..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:border-brand-500"></textarea>
+                        <button onclick="saveVaultNotes()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                            Salva Note Vault
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
     </main>
 
+    <!-- ================= MODALS ================= -->
+
+    <!-- GITHUB CONFIG MODAL -->
+    <div id="modal-config" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-lg font-bold text-white flex items-center">
+                    <i class="fa-solid fa-gear text-brand-500 mr-2"></i> Configurazione GitHub Sync
+                </h3>
+                <button onclick="closeConfigModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">GitHub Username</label>
+                    <input type="text" id="cfg-username" placeholder="es. CRESTAN2013" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Nome Repository</label>
+                    <input type="text" id="cfg-repo" placeholder="es. vendo-su-forum" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Personal Access Token (PAT)</label>
+                    <input type="password" id="cfg-token" placeholder="ghp_..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 font-mono">
+                    <p class="text-[10px] text-slate-400 mt-1">Richiede permesso <code class="text-brand-400">repo</code>. Salvato nel browser locale di questo dispositivo.</p>
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-700 flex justify-end space-x-2">
+                <button onclick="closeConfigModal()" class="px-4 py-2 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">Annulla</button>
+                <button onclick="saveGitHubConfig()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center">
+                    <i class="fa-solid fa-floppy-disk mr-1.5"></i> Salva Configurazione
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ITEM MODAL (ADD / EDIT) -->
+    <div id="modal-item" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 my-8">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 id="modal-item-title" class="text-lg font-bold text-white">Aggiungi Nuovo Articolo</h3>
+                <button onclick="closeItemModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <form id="item-form" onsubmit="saveItem(event)" class="space-y-3">
+                <input type="hidden" id="item-id">
+                
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Titolo / Nome Articolo *</label>
+                    <input type="text" id="item-title" required placeholder="es. Carburatore Dell'Orto PHBG 19" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Categoria</label>
+                        <input type="text" id="item-category" placeholder="es. Motore, Ciclistica..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Stato</label>
+                        <select id="item-status" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                            <option value="Disponibile">Disponibile</option>
+                            <option value="In Trattativa">In Trattativa</option>
+                            <option value="Venduto">Venduto</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Prezzo (€)</label>
+                        <input type="number" step="0.01" id="item-price" placeholder="50.00" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Quantità</label>
+                        <input type="number" id="item-qty" value="1" min="1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">URL Immagine (opzionale)</label>
+                    <input type="url" id="item-image" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Descrizione / Condizioni / Note</label>
+                    <textarea id="item-desc" rows="3" placeholder="Dettagli sulle condizioni, compatibilità, spedizione..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500"></textarea>
+                </div>
+
+                <div class="pt-3 border-t border-slate-700 flex justify-end space-x-2">
+                    <button type="button" onclick="closeItemModal()" class="px-4 py-2 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">Annulla</button>
+                    <button type="submit" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Salva Articolo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FORUM MODAL -->
+    <div id="modal-forum" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 id="modal-forum-title" class="text-lg font-bold text-white">Aggiungi Forum</h3>
+                <button onclick="closeForumModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <form id="forum-form" onsubmit="saveForum(event)" class="space-y-3">
+                <input type="hidden" id="forum-id">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Nome Forum *</label>
+                    <input type="text" id="forum-name" required placeholder="es. Forum Vespa Italia" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">URL Sito Web / Sezione Mercatino</label>
+                    <input type="url" id="forum-url" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Username Utente</label>
+                        <input type="text" id="forum-user" placeholder="il tuo nick" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Note / Regole Mercatino</label>
+                        <input type="text" id="forum-notes" placeholder="es. min 50 messaggi" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-700 flex justify-end space-x-2">
+                    <button type="button" onclick="closeForumModal()" class="px-4 py-2 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">Annulla</button>
+                    <button type="submit" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Salva Forum</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATIONS CONTAINER -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- JavaScript Application Logic -->
     <script>
-        // GESTIONE TAB CON EVENT LISTENERS INDIPENDENTI
-        function openTab(tabId) {
-            const tabs = document.querySelectorAll('.tab-content');
-            tabs.forEach(t => t.classList.remove('active'));
+        // --- GLOBAL APP STATE ---
+        let appData = {
+            config: {
+                username: '',
+                repo: '',
+                token: ''
+            },
+            inventory: [],
+            forums: [],
+            vaultNotes: '',
+            lastSync: null
+        };
 
-            const btns = document.querySelectorAll('.nav-btn');
-            btns.forEach(b => b.classList.remove('active'));
+        const STORAGE_KEY = 'vendo_su_forum_data';
 
-            const selectedTab = document.getElementById('tab-' + tabId);
-            const selectedBtn = document.getElementById('btn-' + tabId);
+        // --- INIT APP ---
+        window.onload = function() {
+            loadLocalData();
+            updateConfigDisplays();
+            renderInventory();
+            renderForums();
+            updateStats();
+            populateGeneratorSelect();
+            
+            // Auto load from GitHub if config exists
+            if (appData.config.username && appData.config.repo && appData.config.token) {
+                updateSyncBadge(true);
+            } else {
+                updateSyncBadge(false);
+            }
+        };
 
-            if (selectedTab) selectedTab.classList.add('active');
-            if (selectedBtn) selectedBtn.classList.add('active');
-
-            if (tabId === 'directory') { updateCategorySelects(); renderDirectory(); }
-            if (tabId === 'inventory') { loadInventory(); }
-            if (tabId === 'vault') { checkMasterPasswordState(); }
+        // --- LOCAL STORAGE MANAGEMENT ---
+        function loadLocalData() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    appData = JSON.parse(saved);
+                    if (!appData.config) appData.config = { username: '', repo: '', token: '' };
+                    if (!appData.inventory) appData.inventory = [];
+                    if (!appData.forums) appData.forums = [];
+                } catch (e) {
+                    console.error("Errore lettura dati locali", e);
+                }
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const navButtons = document.querySelectorAll('.nav-btn');
-            navButtons.forEach(btn => {
-                const target = btn.getAttribute('data-target');
-                btn.addEventListener('click', (e) => { e.preventDefault(); openTab(target); });
+        function saveLocalData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            updateConfigDisplays();
+            updateStats();
+            populateGeneratorSelect();
+        }
+
+        // --- TAB NAVIGATION ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-brand-500', 'text-brand-500');
+                btn.classList.add('border-transparent', 'text-slate-400');
             });
 
-            checkCloudStatus();
-            updateCategorySelects();
-            generateCode();
-        });
-
-        const inputs = ['item-title', 'item-brand', 'item-mpn', 'item-price', 'item-price-type', 'item-location', 'item-condition', 'item-usage', 'item-defects', 'item-shippay', 'item-images'];
-        inputs.forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.addEventListener('input', generateCode);
-        });
-
-        function generateCode() {
-            const title = document.getElementById('item-title').value || 'Titolo Oggetto';
-            const brand = document.getElementById('item-brand').value || '-';
-            const mpn = document.getElementById('item-mpn').value || '-';
-            const price = document.getElementById('item-price').value || '0';
-            const priceType = document.getElementById('item-price-type').value;
-            const loc = (document.getElementById('item-location').value || 'VR').toUpperCase();
-            const cond = document.getElementById('item-condition').value;
-            const usage = document.getElementById('item-usage').value || '-';
-            const defects = document.getElementById('item-defects').value || 'Nessuno / Carter vergine';
-            const shippay = document.getElementById('item-shippay').value || '-';
-            
-            const rawImages = document.getElementById('item-images').value.trim();
-            let bbcodeImages = '';
-            let markdownImages = '';
-
-            if (rawImages) {
-                const links = rawImages.split(/[\s,]+/).filter(link => link.startsWith('http'));
-                if (links.length > 0) {
-                    bbcodeImages = '\n\n[B]FOTO REALI:[/B]\n' + links.map(l => `[IMG]${l.trim()}[/IMG]`).join('\n');
-                    markdownImages = '\n\n**Foto Reali:**\n' + links.map(l => `![Foto](${l.trim()})`).join('\n');
-                }
-            }
-
-            const bbcode = `[SIZE=4][B][VENDO][${loc}] ${title}[/B][/SIZE]\n\n[B]Marca/Modello Engine:[/B] ${brand}\n[B]Codice MPN/OEM/Sigla:[/B] ${mpn}\n[B]Condizioni:[/B] ${cond}\n[B]Prezzo:[/B] ${price}€ (${priceType})\n\n[B]DETTAGLI & LAVORAZIONI MECCANICHE:[/B]\n- Utilizzo/Ore Banco: ${usage}\n- Stato/Sedi/Note: ${defects}\n\n[B]SPEDIZIONE / PAGAMENTO:[/B]\n${shippay}${bbcodeImages}`;
-            const markdown = `### **[VENDO][${loc}] ${title}**\n\n* **Marca/Modello:** ${brand}\n* **MPN/OEM/Sigla:** ${mpn}\n* **Condizioni:** ${cond}\n* **Prezzo:** ${price}€ (${priceType})\n\n**Dettagli Meccanici:** ${usage} | ${defects}\n**Spedizione/Pagamento:** ${shippay}${markdownImages}`;
-
-            document.getElementById('output-bbcode').value = bbcode;
-            document.getElementById('output-markdown').value = markdown;
+            document.getElementById(`sec-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.add('border-brand-500', 'text-brand-500');
+            activeBtn.classList.remove('border-transparent', 'text-slate-400');
         }
 
-        function copyCode(type) {
-            const text = document.getElementById('output-' + type).value;
-            navigator.clipboard.writeText(text);
-            alert('Codice ' + type.toUpperCase() + ' copiato negli appunti!');
-        }
+        // --- GITHUB SYNC ENGINE ---
+        function updateSyncBadge(connected) {
+            const badge = document.getElementById('sync-status-badge');
+            const timeSpan = document.getElementById('last-sync-time');
 
-        function resetForm() {
-            inputs.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-            generateCode();
-        }
-
-        const defaultCategories = [
-            "Scooter, Tuning & Gare",
-            "Moto, Motorini & 2T/4T",
-            "Meccanica di Precisione & CNC",
-            "Elettromeccanica & Automazione",
-            "Informatica & Tech"
-        ];
-
-        function getCategories() {
-            let stored = localStorage.getItem('app_categories');
-            if(!stored) {
-                localStorage.setItem('app_categories', JSON.stringify(defaultCategories));
-                return defaultCategories;
-            }
-            return JSON.parse(stored);
-        }
-
-        function addNewCategoryPrompt() {
-            const catName = prompt("Inserisci il nome della nuova Categoria:");
-            if(catName && catName.trim() !== '') {
-                let cats = getCategories();
-                const trimmed = catName.trim();
-                if(!cats.includes(trimmed)) {
-                    cats.push(trimmed);
-                    localStorage.setItem('app_categories', JSON.stringify(cats));
-                    updateCategorySelects();
-                    document.getElementById('filter-cat').value = trimmed;
-                    renderDirectory();
-                    alert("Categoria '" + trimmed + "' aggiunta!");
-                } else {
-                    alert("Questa categoria esiste già!");
-                }
-            }
-        }
-
-        function updateCategorySelects() {
-            const cats = getCategories();
-            const filterSel = document.getElementById('filter-cat');
-            const newCatSel = document.getElementById('new-cat');
-            if(!filterSel || !newCatSel) return;
-
-            const currentFilter = filterSel.value || 'ALL';
-
-            let filterHtml = '<option value="ALL">Tutte le Categorie</option>';
-            cats.forEach(c => { filterHtml += `<option value="${c}">${c}</option>`; });
-            filterSel.innerHTML = filterHtml;
-            filterSel.value = currentFilter;
-
-            let newCatHtml = '';
-            cats.forEach(c => { newCatHtml += `<option value="${c}">${c}</option>`; });
-            newCatSel.innerHTML = newCatHtml;
-        }
-
-        function exportData() {
-            const backupData = {
-                inventory: localStorage.getItem('my_inventory'),
-                forumDirectory: localStorage.getItem('app_forum_directory'),
-                categories: localStorage.getItem('app_categories'),
-                vault: localStorage.getItem('my_vault'),
-                masterPass: localStorage.getItem('vault_master_pass'),
-                ghUser: localStorage.getItem('gh_user'),
-                ghRepo: localStorage.getItem('gh_repo'),
-                ghToken: localStorage.getItem('gh_token'),
-                exportDate: new Date().toISOString()
-            };
-
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `backup_app_forum_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        function importData(event) {
-            const fileReader = new FileReader();
-            fileReader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if(data.inventory) localStorage.setItem('my_inventory', data.inventory);
-                    if(data.forumDirectory) localStorage.setItem('app_forum_directory', data.forumDirectory);
-                    if(data.categories) localStorage.setItem('app_categories', data.categories);
-                    if(data.vault) localStorage.setItem('my_vault', data.vault);
-                    if(data.masterPass) localStorage.setItem('vault_master_pass', data.masterPass);
-                    if(data.ghUser) localStorage.setItem('gh_user', data.ghUser);
-                    if(data.ghRepo) localStorage.setItem('gh_repo', data.ghRepo);
-                    if(data.ghToken) localStorage.setItem('gh_token', data.ghToken);
-
-                    alert("Dati ripristinati con successo!");
-                    checkCloudStatus();
-                    location.reload();
-                } catch(err) {
-                    alert("Errore nell'importazione!");
-                }
-            };
-            if(event.target.files[0]) fileReader.readAsText(event.target.files[0]);
-        }
-
-        function checkCloudStatus() {
-            const user = localStorage.getItem('gh_user');
-            const repo = localStorage.getItem('gh_repo');
-            const token = localStorage.getItem('gh_token');
-            const badge = document.getElementById('cloud-status');
-            if(!badge) return;
-
-            if(user && repo && token) {
-                badge.className = "cloud-badge active";
-                badge.innerHTML = `🟢 GitHub: ${repo}`;
+            if (connected) {
+                badge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-300 border border-emerald-700";
+                badge.innerHTML = `<span class="w-1.5 h-1.5 mr-1.5 bg-emerald-400 rounded-full"></span> 🟢 GitHub: ${appData.config.repo || 'collegato'}`;
             } else {
-                badge.className = "cloud-badge";
-                badge.innerHTML = `⚪ Cloud non collegato`;
-            }
-        }
-
-        function saveGitHubConfig() {
-            const user = document.getElementById('gh-user').value.trim();
-            const repo = document.getElementById('gh-repo').value.trim();
-            const token = document.getElementById('gh-token').value.trim();
-
-            if(!user || !repo || !token) {
-                alert("Compila tutti i tre campi GitHub!");
-                return;
+                badge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-900/50 text-red-300 border border-red-700";
+                badge.innerHTML = `<span class="w-1.5 h-1.5 mr-1.5 bg-red-400 rounded-full animate-pulse"></span> Non collegato`;
             }
 
-            localStorage.setItem('gh_user', user);
-            localStorage.setItem('gh_repo', repo);
-            localStorage.setItem('gh_token', token);
-            checkCloudStatus();
-            alert("Configurazione GitHub salvata!");
-        }
-
-        function loadGitHubConfig() {
-            const userEl = document.getElementById('gh-user');
-            const repoEl = document.getElementById('gh-repo');
-            const tokenEl = document.getElementById('gh-token');
-            if(userEl) userEl.value = localStorage.getItem('gh_user') || '';
-            if(repoEl) repoEl.value = localStorage.getItem('gh_repo') || '';
-            if(tokenEl) tokenEl.value = localStorage.getItem('gh_token') || '';
+            if (appData.lastSync) {
+                timeSpan.innerText = `Sincronizzato: ${appData.lastSync}`;
+            }
         }
 
         async function saveToGitHub() {
-            const user = localStorage.getItem('gh_user');
-            const repo = localStorage.getItem('gh_repo');
-            const token = localStorage.getItem('gh_token');
-
-            if(!user || !repo || !token) {
-                alert("Configura prima le impostazioni GitHub nella scheda Vault!");
-                openTab('vault');
+            const { username, repo, token } = appData.config;
+            if (!username || !repo || !token) {
+                showToast("Configura prima Username, Repository e Token nelle Impostazioni!", "error");
+                openConfigModal();
                 return;
             }
 
-            const backupData = {
-                inventory: localStorage.getItem('my_inventory'),
-                forumDirectory: localStorage.getItem('app_forum_directory'),
-                categories: localStorage.getItem('app_categories'),
-                vault: localStorage.getItem('my_vault'),
-                masterPass: localStorage.getItem('vault_master_pass'),
-                updatedAt: new Date().toISOString()
-            };
+            showToast("Salvataggio su GitHub in corso...", "info");
 
-            const contentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(backupData, null, 2))));
-            const url = `https://api.github.com/repos/${user}/${repo}/contents/data.json`;
+            const url = `https://api.github.com/repos/${username}/${repo}/contents/data.json`;
+            
+            // Prepare clean data to push
+            appData.lastSync = new Date().toLocaleString('it-IT');
+            const contentString = JSON.stringify(appData, null, 2);
+            const contentEncoded = btoa(unescape(encodeURIComponent(contentString)));
 
             try {
-                let sha = "";
-                const getRes = await fetch(url, { headers: { Authorization: `token ${token}` } });
-                if(getRes.ok) {
-                    const getJson = await getRes.json();
-                    sha = getJson.sha;
+                // Check if file exists to get SHA
+                let sha = null;
+                const getRes = await fetch(url, {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                
+                if (getRes.ok) {
+                    const fileInfo = await getRes.json();
+                    sha = fileInfo.sha;
                 }
 
+                // Put / Update File
                 const putRes = await fetch(url, {
-                    method: "PUT",
+                    method: 'PUT',
                     headers: {
-                        Authorization: `token ${token}`,
-                        "Content-Type": "application/json"
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        message: "Sync backup data",
-                        content: contentBase64,
+                        message: `Sync data update - ${new Date().toISOString()}`,
+                        content: contentEncoded,
                         sha: sha || undefined
                     })
                 });
 
-                if(putRes.ok) {
-                    alert("☁️ Dati salvati con successo su GitHub!");
+                if (putRes.ok) {
+                    saveLocalData();
+                    updateSyncBadge(true);
+                    showToast(" Dati salvati con successo su GitHub!", "success");
                 } else {
-                    alert("Errore nel salvataggio su GitHub. Verifica token o permessi repository.");
+                    const errData = await putRes.json();
+                    showToast(`Errore GitHub: ${errData.message || 'Verifica il Token'}`, "error");
                 }
-            } catch(e) {
-                alert("Errore di connessione a GitHub!");
+            } catch (err) {
+                console.error(err);
+                showToast("Errore di connessione a GitHub", "error");
             }
         }
 
         async function loadFromGitHub() {
-            const user = localStorage.getItem('gh_user');
-            const repo = localStorage.getItem('gh_repo');
-            const token = localStorage.getItem('gh_token');
-
-            if(!user || !repo || !token) {
-                alert("Configura prima le impostazioni GitHub nella scheda Vault!");
-                openTab('vault');
+            const { username, repo, token } = appData.config;
+            if (!username || !repo || !token) {
+                showToast("Configura prima i dati GitHub nelle Impostazioni!", "error");
+                openConfigModal();
                 return;
             }
 
-            const url = `https://api.github.com/repos/${user}/${repo}/contents/data.json`;
+            showToast("Caricamento da GitHub...", "info");
+            const url = `https://api.github.com/repos/${username}/${repo}/contents/data.json`;
 
             try {
-                const res = await fetch(url, { headers: { Authorization: `token ${token}` } });
-                if(!res.ok) {
-                    alert("Impossibile trovare il file data.json su GitHub. Esegui prima un 'Salva su GitHub'.");
-                    return;
+                const res = await fetch(url, {
+                    headers: token ? { 'Authorization': `token ${token}` } : {}
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const decodedContent = decodeURIComponent(escape(atob(data.content)));
+                    const cloudData = JSON.parse(decodedContent);
+
+                    // Merge strategy: keep current config if cloud config empty
+                    if (cloudData) {
+                        appData.inventory = cloudData.inventory || [];
+                        appData.forums = cloudData.forums || [];
+                        appData.vaultNotes = cloudData.vaultNotes || '';
+                        appData.lastSync = new Date().toLocaleString('it-IT');
+                        
+                        saveLocalData();
+                        renderInventory();
+                        renderForums();
+                        updateSyncBadge(true);
+                        showToast(" Dati aggiornati con successo da GitHub!", "success");
+                    }
+                } else {
+                    showToast("File data.json non trovato su GitHub o permessi insufficienti", "error");
                 }
-
-                const json = await res.json();
-                const decodedText = decodeURIComponent(escape(atob(json.content)));
-                const data = JSON.parse(decodedText);
-
-                if(data.inventory) localStorage.setItem('my_inventory', data.inventory);
-                if(data.forumDirectory) localStorage.setItem('app_forum_directory', data.forumDirectory);
-                if(data.categories) localStorage.setItem('app_categories', data.categories);
-                if(data.vault) localStorage.setItem('my_vault', data.vault);
-                if(data.masterPass) localStorage.setItem('vault_master_pass', data.masterPass);
-
-                alert("🔄 Dati caricati e sincronizzati da GitHub con successo!");
-                location.reload();
-            } catch(e) {
-                alert("Errore durante il caricamento da GitHub!");
+            } catch (err) {
+                console.error(err);
+                showToast("Errore durante il caricamento da GitHub", "error");
             }
         }
 
-        const initialForums = [
-            { id: 1, name: "Scooternos (Scooter Racing & Tuning)", cat: "Scooter, Tuning & Gare", engine: "phpBB", url: "http://www.scooternos.net/forums/" },
-            { id: 2, name: "Polini Cup & Trofei Scooter", cat: "Scooter, Tuning & Gare", engine: "phpBB", url: "https://www.polini.com/trofei-polini/" },
-            { id: 3, name: "Malossi Official Trofei & Forum", cat: "Scooter, Tuning & Gare", engine: "XenForo", url: "https://www.trofeimalossi.com/" },
-            { id: 4, name: "Scooter-Club Italia Mercatino", cat: "Scooter, Tuning & Gare", engine: "phpBB", url: "http://www.scooter-club.it/forum/" },
-            { id: 5, name: "Vespa Racing & Drag Race 2T", cat: "Scooter, Tuning & Gare", engine: "phpBB", url: "https://www.et3.it/forum/12-vespa-da-accelerazione-e-pista/" },
-            { id: 6, name: "Et3.it Vespa & Elaborazioni 2T", cat: "Moto, Motorini & 2T/4T", engine: "phpBB", url: "https://www.et3.it/forum/28-mercatino-vendo/" },
-            { id: 7, name: "Vespa Resources Mercatino", cat: "Moto, Motorini & 2T/4T", engine: "XenForo", url: "https://www.vesparesources.com/forum/35-mercatino/" },
-            { id: 8, name: "Ting'Avert Moto & Scooter", cat: "Moto, Motorini & 2T/4T", engine: "vBulletin", url: "https://www.motoclub-tingavert.it/f22s.html" },
-            { id: 9, name: "CNC Italia Forum Meccanica", cat: "Meccanica di Precisione & CNC", engine: "phpBB", url: "https://www.cncitalia.net/forum/viewforum.php?f=16" },
-            { id: 10, name: "CNC Italia Lavorazioni & Barenatura", cat: "Meccanica di Precisione & CNC", engine: "phpBB", url: "https://www.cncitalia.net/forum/viewforum.php?f=21" },
-            { id: 11, name: "PLC Forum (Inverter & Motori)", cat: "Elettromeccanica & Automazione", engine: "Invision", url: "https://www.plcforum.it/portale/index.php" },
-            { id: 12, name: "ElectroYou Elettrotecnica & Potenza", cat: "Elettromeccanica & Automazione", engine: "phpBB", url: "https://www.electroyou.it/forum/" }
-        ];
+        // --- CONFIG MODAL & EXPORT/IMPORT ---
+        function openConfigModal() {
+            document.getElementById('cfg-username').value = appData.config.username || '';
+            document.getElementById('cfg-repo').value = appData.config.repo || '';
+            document.getElementById('cfg-token').value = appData.config.token || '';
+            document.getElementById('modal-config').classList.remove('hidden');
+        }
 
-        function getForums() {
-            let stored = localStorage.getItem('app_forum_directory');
-            if(!stored) {
-                localStorage.setItem('app_forum_directory', JSON.stringify(initialForums));
-                return initialForums;
+        function closeConfigModal() {
+            document.getElementById('modal-config').classList.add('hidden');
+        }
+
+        function saveGitHubConfig() {
+            appData.config.username = document.getElementById('cfg-username').value.trim();
+            appData.config.repo = document.getElementById('cfg-repo').value.trim();
+            appData.config.token = document.getElementById('cfg-token').value.trim();
+
+            saveLocalData();
+            closeConfigModal();
+            updateSyncBadge(!!appData.config.token);
+            showToast("Impostazioni GitHub salvate!", "success");
+        }
+
+        function updateConfigDisplays() {
+            document.getElementById('vault-disp-user').innerText = appData.config.username || 'Non impostato';
+            document.getElementById('vault-disp-repo').innerText = appData.config.repo || 'Non impostato';
+            document.getElementById('vault-disp-token').innerText = appData.config.token ? '••••••••' + appData.config.token.slice(-4) : 'Non salvato';
+        }
+
+        function exportConfigFile() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData.config, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `github-sync-config.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+            showToast("File di configurazione scaricato!", "success");
+        }
+
+        function importConfigFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedConfig = JSON.parse(e.target.result);
+                    if (importedConfig.username && importedConfig.repo) {
+                        appData.config = importedConfig;
+                        saveLocalData();
+                        updateSyncBadge(true);
+                        showToast("Configurazione importata con successo!", "success");
+                    } else {
+                        showToast("File di configurazione non valido!", "error");
+                    }
+                } catch (err) {
+                    showToast("Errore durante l'importazione del file JSON", "error");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- INVENTORY MANAGEMENT ---
+        function renderInventory() {
+            const container = document.getElementById('inventory-container');
+            const search = document.getElementById('inv-search').value.toLowerCase();
+            const filterStatus = document.getElementById('inv-filter-status').value;
+            const filterCat = document.getElementById('inv-filter-cat').value;
+
+            container.innerHTML = '';
+
+            // Extract unique categories for filter
+            const categories = [...new Set(appData.inventory.map(i => i.category).filter(Boolean))];
+            const catSelect = document.getElementById('inv-filter-cat');
+            catSelect.innerHTML = '<option value="ALL">Tutte le categorie</option>' + 
+                categories.map(c => `<option value="${c}" ${filterCat === c ? 'selected' : ''}>${c}</option>`).join('');
+
+            const filtered = appData.inventory.filter(item => {
+                const matchesSearch = item.title.toLowerCase().includes(search) || 
+                                      (item.category && item.category.toLowerCase().includes(search)) ||
+                                      (item.description && item.description.toLowerCase().includes(search));
+                const matchesStatus = filterStatus === 'ALL' || item.status === filterStatus;
+                const matchesCat = filterCat === 'ALL' || item.category === filterCat;
+                return matchesSearch && matchesStatus && matchesCat;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-500 bg-slate-800/40 rounded-xl border border-dashed border-slate-700">
+                        <i class="fa-solid fa-box-open text-4xl mb-3"></i>
+                        <p class="text-base font-medium">Nessun articolo trovato</p>
+                        <p class="text-xs text-slate-400 mt-1">Aggiungi un nuovo articolo o modifica i filtri di ricerca</p>
+                    </div>`;
+                return;
             }
-            return JSON.parse(stored);
+
+            filtered.forEach(item => {
+                const statusBadge = item.status === 'Disponibile' ? 'bg-emerald-900/60 text-emerald-300 border-emerald-700' :
+                                    item.status === 'In Trattativa' ? 'bg-amber-900/60 text-amber-300 border-amber-700' :
+                                    'bg-slate-700 text-slate-400 border-slate-600';
+
+                const card = document.createElement('div');
+                card.className = "bg-slate-800 rounded-xl border border-slate-700/70 overflow-hidden shadow-sm hover:border-slate-600 transition flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        ${item.image ? `<img src="${item.image}" onerror="this.style.display='none'" class="w-full h-40 object-cover border-b border-slate-700" alt="Foto">` : ''}
+                        <div class="p-4 space-y-2">
+                            <div class="flex justify-between items-start gap-2">
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded border ${statusBadge}">${item.status}</span>
+                                ${item.category ? `<span class="text-[11px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-700/50">${item.category}</span>` : ''}
+                            </div>
+                            <h3 class="font-bold text-white text-base leading-snug line-clamp-2">${item.title}</h3>
+                            <p class="text-xs text-slate-400 line-clamp-2">${item.description || 'Nessuna descrizione.'}</p>
+                        </div>
+                    </div>
+                    <div class="p-4 pt-0 space-y-3">
+                        <div class="flex justify-between items-end border-t border-slate-700/60 pt-3">
+                            <div>
+                                <span class="text-[10px] text-slate-400 uppercase block">Quantità</span>
+                                <span class="text-sm font-semibold text-slate-200">${item.qty || 1} pz</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] text-slate-400 uppercase block">Prezzo</span>
+                                <span class="text-lg font-bold text-sky-400">€ ${parseFloat(item.price || 0).toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2 pt-1">
+                            <button onclick="editItem('${item.id}')" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs py-1.5 rounded-lg transition font-medium">
+                                <i class="fa-solid fa-pen-to-square mr-1"></i> Modifica
+                            </button>
+                            <button onclick="deleteItem('${item.id}')" class="bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-800/50 text-xs px-2.5 py-1.5 rounded-lg transition">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
         }
 
-        function toggleAddForum() {
-            const box = document.getElementById('add-forum-box');
-            if(box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        function openItemModal(isEdit = false) {
+            if (!isEdit) {
+                document.getElementById('item-form').reset();
+                document.getElementById('item-id').value = '';
+                document.getElementById('modal-item-title').innerText = 'Aggiungi Nuovo Articolo';
+            }
+            document.getElementById('modal-item').classList.remove('hidden');
         }
 
-        function saveCustomForum() {
-            const name = document.getElementById('new-name').value;
-            const cat = document.getElementById('new-cat').value;
-            const engine = document.getElementById('new-engine').value;
-            const url = document.getElementById('new-url').value;
+        function closeItemModal() {
+            document.getElementById('modal-item').classList.add('hidden');
+        }
 
-            if(!name || !url) { alert('Compila il nome e l\'URL!'); return; }
+        function saveItem(e) {
+            e.preventDefault();
+            const id = document.getElementById('item-id').value || 'item_' + Date.now();
+            const newItem = {
+                id: id,
+                title: document.getElementById('item-title').value.trim(),
+                category: document.getElementById('item-category').value.trim(),
+                status: document.getElementById('item-status').value,
+                price: parseFloat(document.getElementById('item-price').value) || 0,
+                qty: parseInt(document.getElementById('item-qty').value) || 1,
+                image: document.getElementById('item-image').value.trim(),
+                description: document.getElementById('item-desc').value.trim()
+            };
 
-            let forums = getForums();
-            forums.push({ id: Date.now(), name, cat, engine, url });
-            localStorage.setItem('app_forum_directory', JSON.stringify(forums));
+            const existingIndex = appData.inventory.findIndex(i => i.id === id);
+            if (existingIndex > -1) {
+                appData.inventory[existingIndex] = newItem;
+            } else {
+                appData.inventory.unshift(newItem);
+            }
 
-            document.getElementById('new-name').value = '';
-            document.getElementById('new-url').value = '';
-            toggleAddForum();
-            renderDirectory();
+            saveLocalData();
+            renderInventory();
+            closeItemModal();
+            showToast("Articolo salvato nell'inventario!", "success");
+        }
+
+        function editItem(id) {
+            const item = appData.inventory.find(i => i.id === id);
+            if (!item) return;
+
+            document.getElementById('item-id').value = item.id;
+            document.getElementById('item-title').value = item.title;
+            document.getElementById('item-category').value = item.category || '';
+            document.getElementById('item-status').value = item.status;
+            document.getElementById('item-price').value = item.price;
+            document.getElementById('item-qty').value = item.qty || 1;
+            document.getElementById('item-image').value = item.image || '';
+            document.getElementById('item-desc').value = item.description || '';
+
+            document.getElementById('modal-item-title').innerText = 'Modifica Articolo';
+            openItemModal(true);
+        }
+
+        function deleteItem(id) {
+            if (confirm("Sei sicuro di voler eliminare questo articolo dall'inventario?")) {
+                appData.inventory = appData.inventory.filter(i => i.id !== id);
+                saveLocalData();
+                renderInventory();
+                showToast("Articolo eliminato.", "info");
+            }
+        }
+
+        function updateStats() {
+            const total = appData.inventory.length;
+            const available = appData.inventory.filter(i => i.status === 'Disponibile').length;
+            const sold = appData.inventory.filter(i => i.status === 'Venduto').length;
+            const totalVal = appData.inventory.reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseInt(i.qty || 1)), 0);
+
+            document.getElementById('stat-total-items').innerText = total;
+            document.getElementById('stat-available-items').innerText = available;
+            document.getElementById('stat-sold-items').innerText = sold;
+            document.getElementById('stat-total-value').innerText = `€ ${totalVal.toFixed(2)}`;
+        }
+
+        // --- FORUMS MANAGEMENT ---
+        function renderForums() {
+            const container = document.getElementById('forums-container');
+            container.innerHTML = '';
+
+            if (appData.forums.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-10 text-center text-slate-500 bg-slate-800/40 rounded-xl border border-dashed border-slate-700">
+                        <i class="fa-solid fa-comments text-3xl mb-2"></i>
+                        <p class="text-sm font-medium">Nessun forum salvato</p>
+                    </div>`;
+                return;
+            }
+
+            appData.forums.forEach(forum => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <h3 class="font-bold text-white text-base">${forum.name}</h3>
+                            ${forum.url ? `<a href="${forum.url}" target="_blank" class="text-brand-400 hover:text-brand-300 text-xs flex items-center"><i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Apri</a>` : ''}
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1"><i class="fa-solid fa-user mr-1 text-slate-500"></i> ${forum.user || 'Nessun utente'}</p>
+                        ${forum.notes ? `<p class="text-xs text-slate-300 mt-2 bg-slate-900/60 p-2 rounded border border-slate-700/50">${forum.notes}</p>` : ''}
+                    </div>
+                    <div class="flex justify-end space-x-2 border-t border-slate-700/60 pt-2">
+                        <button onclick="editForum('${forum.id}')" class="text-xs text-slate-300 hover:text-white px-2 py-1"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteForum('${forum.id}')" class="text-xs text-red-400 hover:text-red-300 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openForumModal() {
+            document.getElementById('forum-form').reset();
+            document.getElementById('forum-id').value = '';
+            document.getElementById('modal-forum').classList.remove('hidden');
+        }
+
+        function closeForumModal() {
+            document.getElementById('modal-forum').classList.add('hidden');
+        }
+
+        function saveForum(e) {
+            e.preventDefault();
+            const id = document.getElementById('forum-id').value || 'forum_' + Date.now();
+            const newForum = {
+                id: id,
+                name: document.getElementById('forum-name').value.trim(),
+                url: document.getElementById('forum-url').value.trim(),
+                user: document.getElementById('forum-user').value.trim(),
+                notes: document.getElementById('forum-notes').value.trim()
+            };
+
+            const index = appData.forums.findIndex(f => f.id === id);
+            if (index > -1) {
+                appData.forums[index] = newForum;
+            } else {
+                appData.forums.push(newForum);
+            }
+
+            saveLocalData();
+            renderForums();
+            closeForumModal();
+            showToast("Forum salvato!", "success");
+        }
+
+        function editForum(id) {
+            const forum = appData.forums.find(f => f.id === id);
+            if (!forum) return;
+
+            document.getElementById('forum-id').value = forum.id;
+            document.getElementById('forum-name').value = forum.name;
+            document.getElementById('forum-url').value = forum.url || '';
+            document.getElementById('forum-user').value = forum.user || '';
+            document.getElementById('forum-notes').value = forum.notes || '';
+
+            document.getElementById('modal-forum').classList.remove('hidden');
         }
 
         function deleteForum(id) {
-            if(confirm("Sei sicuro di voler eliminare questo forum dal database?")) {
-                let forums = getForums();
-                forums = forums.filter(f => f.id !== id);
-                localStorage.setItem('app_forum_directory', JSON.stringify(forums));
-                renderDirectory();
+            if (confirm("Rimuovere questo forum dalla directory?")) {
+                appData.forums = appData.forums.filter(f => f.id !== id);
+                saveLocalData();
+                renderForums();
             }
         }
 
-        function prepareVaultForForum(name, url) {
-            openTab('vault');
-            const vName = document.getElementById('v-name');
-            const vUrl = document.getElementById('v-url');
-            if(vName) vName.value = name;
-            if(vUrl) vUrl.value = url;
-            alert("Compila il tuo Username e Password per salvare l'accesso a: " + name);
+        // --- ANNOUNCEMENT GENERATOR ---
+        function populateGeneratorSelect() {
+            const select = document.getElementById('gen-item-select');
+            select.innerHTML = '<option value="">-- Seleziona un oggetto --</option>' +
+                appData.inventory.map(i => `<option value="${i.id}">${i.title} (€${i.price})</option>`).join('');
         }
 
-        function renderDirectory() {
-            const container = document.getElementById('forum-directory');
-            const filterEl = document.getElementById('filter-cat');
-            if(!container || !filterEl) return;
+        function generatePost() {
+            const itemId = document.getElementById('gen-item-select').value;
+            const format = document.getElementById('gen-format-select').value;
+            const output = document.getElementById('gen-output-text');
 
-            const catFilter = filterEl.value;
-            let list = getForums();
-
-            if(catFilter !== 'ALL') {
-                list = list.filter(f => f.cat === catFilter);
-            }
-
-            if(list.length === 0) {
-                container.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#94a3b8; font-size:0.875rem;">Nessun forum trovato in questa categoria.</p>';
+            if (!itemId) {
+                output.value = '';
                 return;
             }
 
-            let html = '';
-            list.forEach(f => {
-                html += `
-                    <div class="forum-card">
-                        <div>
-                            <strong>${f.name}</strong> <span class="badge">${f.engine}</span>
-                            <div style="margin-top:0.35rem;"><span class="badge badge-cat">${f.cat}</span></div>
-                        </div>
-                        <div style="display:flex; flex-direction:column; gap:0.4rem; margin-top:0.5rem;">
-                            <button onclick="window.open('${f.url}', '_blank')" class="btn btn-action" style="padding:0.4rem; font-size:0.75rem;">Incolla & Apri Forum</button>
-                            <div style="display:flex; gap:0.4rem;">
-                                <button onclick="prepareVaultForForum('${f.name}', '${f.url}')" class="btn btn-secondary" style="flex:1; padding:0.3rem; font-size:0.7rem; background-color:#334155;">🔑 Salva Accesso</button>
-                                <button onclick="deleteForum(${f.id})" class="btn btn-danger" style="padding:0.3rem 0.5rem; font-size:0.7rem;">Elimina</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
+            const item = appData.inventory.find(i => i.id === itemId);
+            if (!item) return;
 
-        function saveToInventory() {
-            const now = new Date();
-            const dateStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const title = document.getElementById('item-title').value || 'Senza titolo';
-            const price = document.getElementById('item-price').value || '0';
-            const loc = document.getElementById('item-location').value || 'VR';
-
-            let inv = JSON.parse(localStorage.getItem('my_inventory') || '[]');
-            inv.unshift({ id: Date.now(), title, price, loc, date: dateStr });
-            localStorage.setItem('my_inventory', JSON.stringify(inv));
-            alert('Articolo salvato nell\'inventario!');
-            openTab('inventory');
-        }
-
-        function loadInventory() {
-            const container = document.getElementById('inventory-list');
-            if(!container) return;
-
-            let inv = JSON.parse(localStorage.getItem('my_inventory') || '[]');
-
-            if(inv.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:0.875rem;">Nessun elemento in inventario.</p>';
-                return;
-            }
-
-            let html = '';
-            inv.forEach(item => {
-                html += `
-                    <div class="item-row">
-                        <div>
-                            <strong>${item.title}</strong> - <span style="color:#818cf8; font-weight:bold;">${item.price}€</span>
-                            <div style="font-size:0.75rem; color:#94a3b8; margin-top:0.25rem;">Salvato il <strong>${item.date}</strong> • Località: [${item.loc}]</div>
-                        </div>
-                        <div style="display:flex; gap:0.5rem;">
-                            <button onclick="navigator.clipboard.writeText('UP! Disponibile.'); alert('Testo UP copiato!');" class="btn btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.75rem;">Copia UP</button>
-                            <button onclick="deleteInventory(${item.id})" class="btn btn-danger" style="padding:0.3rem 0.6rem; font-size:0.75rem;">Elimina</button>
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-
-        function deleteInventory(id) {
-            let inv = JSON.parse(localStorage.getItem('my_inventory') || '[]');
-            inv = inv.filter(i => i.id !== id);
-            localStorage.setItem('my_inventory', JSON.stringify(inv));
-            loadInventory();
-        }
-
-        function checkMasterPasswordState() {
-            const storedPass = localStorage.getItem('vault_master_pass');
-            const label = document.getElementById('vault-pass-label');
-            const btnUnlock = document.getElementById('btn-unlock-vault');
-            const resetBox = document.getElementById('reset-pass-box');
-
-            if(!label || !btnUnlock || !resetBox) return;
-
-            if(!storedPass) {
-                label.innerText = "Imposta una nuova Master Password per proteggere il Vault:";
-                btnUnlock.innerText = "Crea & Sblocca Vault";
-                resetBox.style.display = "none";
+            let text = '';
+            if (format === 'bbcode') {
+                text = `[b][size=130] VENDO: ${item.title}[/size][/b]\n\n` +
+                       `[b]Prezzo:[/b] € ${parseFloat(item.price).toFixed(2)}\n` +
+                       `[b]Stato/Condizioni:[/b] ${item.status}\n` +
+                       `[b]Quantità disponibile:[/b] ${item.qty || 1}\n\n` +
+                       `[b]Descrizione:[/b]\n${item.description || 'Contattare per maggiori dettagli.'}\n\n` +
+                       (item.image ? `[img]${item.image}[/img]\n\n` : '') +
+                       `[i]Spedizione o consegna a mano da concordare. Contattatemi in PM![/i]`;
             } else {
-                label.innerText = "Inserisci la tua Master Password per accedere:";
-                btnUnlock.innerText = "Sblocca Vault";
-                resetBox.style.display = "block";
+                text = `##  VENDO: ${item.title}\n\n` +
+                       `**Prezzo:** € ${parseFloat(item.price).toFixed(2)}\n` +
+                       `**Stato:** ${item.status}\n\n` +
+                       `### Descrizione:\n${item.description || 'Contattare per maggiori dettagli.'}\n\n` +
+                       (item.image ? `![Foto](${item.image})\n\n` : '') +
+                       `*Spedizione o consegna a mano da concordare.*`;
             }
+
+            output.value = text;
         }
 
+        function copyGeneratedPost() {
+            const output = document.getElementById('gen-output-text');
+            if (!output.value) return;
+            output.select();
+            document.execCommand('copy');
+            showToast("Testo annuncio copiato negli appunti!", "success");
+        }
+
+        // --- VAULT NOTES ---
         function unlockVault() {
-            const inputPass = document.getElementById('master-pass').value;
-            const storedPass = localStorage.getItem('vault_master_pass');
-
-            if(!inputPass) { alert("Inserisci una password!"); return; }
-
-            if(!storedPass) {
-                localStorage.setItem('vault_master_pass', inputPass);
-                alert("Master Password salvata!");
-                showVaultContent();
-            } else if(inputPass === storedPass) {
-                showVaultContent();
+            const pass = document.getElementById('vault-master-pass').value;
+            if (pass) {
+                document.getElementById('vault-lock-screen').classList.add('hidden');
+                document.getElementById('vault-content').classList.remove('hidden');
+                document.getElementById('vault-notes').value = appData.vaultNotes || '';
             } else {
-                alert("Password errata!");
+                showToast("Inserisci una password!", "error");
             }
         }
 
-        function showVaultContent() {
-            document.getElementById('vault-auth').style.display = 'none';
-            document.getElementById('vault-content').style.display = 'block';
-            document.getElementById('btn-close-vault-top').style.display = 'inline-block';
-            loadGitHubConfig();
-            loadVault();
+        function lockVault() {
+            document.getElementById('vault-lock-screen').classList.remove('hidden');
+            document.getElementById('vault-content').classList.add('hidden');
+            document.getElementById('vault-master-pass').value = '';
         }
 
-        function closeVault() {
-            document.getElementById('master-pass').value = '';
-            document.getElementById('v-name').value = '';
-            document.getElementById('v-url').value = '';
-            document.getElementById('v-user').value = '';
-            document.getElementById('v-pass').value = '';
-            document.getElementById('v-notes').value = '';
-            
-            document.getElementById('vault-auth').style.display = 'block';
-            document.getElementById('vault-content').style.display = 'none';
-            document.getElementById('btn-close-vault-top').style.display = 'none';
-            checkMasterPasswordState();
+        function saveVaultNotes() {
+            appData.vaultNotes = document.getElementById('vault-notes').value;
+            saveLocalData();
+            showToast("Note del Vault salvate!", "success");
         }
 
-        function resetMasterPassword() {
-            if(confirm("Vuoi davvero resettare la Master Password?")) {
-                localStorage.removeItem('vault_master_pass');
-                document.getElementById('master-pass').value = '';
-                checkMasterPasswordState();
-                alert("Master Password resettata.");
-            }
-        }
+        // --- TOAST NOTIFICATION UTILITY ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
 
-        function saveVaultCred() {
-            const name = document.getElementById('v-name').value;
-            const url = document.getElementById('v-url').value;
-            const user = document.getElementById('v-user').value;
-            const pass = document.getElementById('v-pass').value;
-            const notes = document.getElementById('v-notes').value;
+            const bgClass = type === 'success' ? 'bg-emerald-800 border-emerald-600 text-emerald-100' :
+                            type === 'error' ? 'bg-red-800 border-red-600 text-red-100' :
+                            'bg-slate-800 border-slate-600 text-slate-100';
 
-            if(!name || !user) { alert('Inserisci almeno Nome Forum e Username!'); return; }
+            const icon = type === 'success' ? 'fa-circle-check text-emerald-400' :
+                         type === 'error' ? 'fa-circle-exclamation text-red-400' :
+                         'fa-circle-info text-sky-400';
 
-            let vault = JSON.parse(localStorage.getItem('my_vault') || '[]');
-            vault.push({ id: Date.now(), name, url, user, pass, notes });
-            localStorage.setItem('my_vault', JSON.stringify(vault));
+            toast.className = `p-3 rounded-lg border shadow-xl flex items-center space-x-2 text-xs font-medium transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto ${bgClass}`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-base"></i> <span>${message}</span>`;
 
-            document.getElementById('v-name').value = '';
-            document.getElementById('v-url').value = '';
-            document.getElementById('v-user').value = '';
-            document.getElementById('v-pass').value = '';
-            document.getElementById('v-notes').value = '';
+            container.appendChild(toast);
 
-            loadVault();
-        }
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
 
-        function deleteVaultCred(id) {
-            if(confirm("Eliminare questa credenziale salvata?")) {
-                let vault = JSON.parse(localStorage.getItem('my_vault') || '[]');
-                vault = vault.filter(v => v.id !== id);
-                localStorage.setItem('my_vault', JSON.stringify(vault));
-                loadVault();
-            }
-        }
-
-        function loadVault() {
-            const container = document.getElementById('vault-list');
-            if(!container) return;
-
-            let vault = JSON.parse(localStorage.getItem('my_vault') || '[]');
-
-            if(vault.length === 0) {
-                container.innerHTML = '<p style="color:#94a3b8; font-size:0.75rem;">Nessuna credenziale salvata.</p>';
-                return;
-            }
-
-            let html = '';
-            vault.forEach(v => {
-                html += `
-                    <div style="background:#0f172a; padding:0.75rem; margin-top:0.5rem; border-radius:0.5rem; border:1px solid #334155; font-size:0.8rem; display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <strong style="color:#818cf8; font-size:0.875rem;">${v.name}</strong>
-                            <div style="color:#cbd5e1; margin-top:0.2rem;">User: <strong>${v.user}</strong> | Pass: <span style="font-family:monospace; background:#1e293b; padding:0.1rem 0.3rem; border-radius:0.2rem;">${v.pass || '••••••'}</span></div>
-                            ${v.url ? `<div style="font-size:0.7rem; color:#94a3b8; margin-top:0.1rem;"><a href="\${v.url}" target="_blank" style="color:#38bdf8; text-decoration:none;">Vai al Login Forum ↗</a></div>` : ''}
-                            ${v.notes ? `<div style="font-size:0.7rem; color:#a5b4fc; margin-top:0.1rem;">Note: \${v.notes}</div>` : ''}
-                        </div>
-                        <button onclick="deleteVaultCred(${v.id})" class="btn btn-danger" style="padding:0.2rem 0.5rem; font-size:0.7rem;">Elimina</button>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
         }
     </script>
 </body>
